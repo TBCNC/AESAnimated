@@ -80,7 +80,7 @@ def drawArrow(frame):
 #Generates the key schedule based on the number of rounds and original key matrix
 def keySchedule(key, rounds=10):
     clear()
-    frame = "Key Generation [{0} rounds]:\n".format(rounds)
+    frame = "Key Schedule Generation [{0} rounds]:\n".format(rounds)
     for i in range(4):
         frame += "W{0}:{1}".format(i,binascii.hexlify(getWord(key,i)).decode()) + "\n"
     print(frame)
@@ -156,6 +156,7 @@ def keySchedule(key, rounds=10):
             time.sleep(0.5)
 
         wordPosition+=1
+    time.sleep(2.0)
     return keyRounds
 
 #Custom print format
@@ -262,7 +263,7 @@ def mixColumns(mat):
     
     clear()
     frame = ""
-    frame += "New Matrix:\n{0}\n".format(matToStr(res))
+    frame += "Cipherblock after MixColumns:\n{0}\n".format(matToStr(res))
     print(frame)
     time.sleep(2.0)
 
@@ -321,9 +322,6 @@ def addRoundKey(mat, keys, roundNumber):
     time.sleep(2.0)
 
     return result
-
-
-
 
 def subBytesMat(mat):
     clear()
@@ -387,10 +385,22 @@ def shiftRows(mat):
         print(frameStr)
         time.sleep(0.5)
     
-
 #This performs the actual algorithm for a matrix, put in animations, command options, etc perhaps another time soon, it is fucking 1:30am.
 def aesAlgorithm(input, key, rounds=10):
+    clear()
+    frame = "Starting AES algorithm for {0} rounds on the following plaintext input and key:".format(rounds)
+    frame += "\nPlaintext Block:\n"
+    frame += matToStr(input)
+    frame += "\nKey Block:\n"
+    frame += matToStr(key)
+    print(frame)
+    time.sleep(3.0)
     keyRounds = keySchedule(key,rounds)
+    clear()
+    frame = "Key schedule obtained:\n"
+    frame += matToStr(keyRounds)
+    print(frame)
+    time.sleep(3.0)
     start = addRoundKey(input, keyRounds, 0)
     currentBlock = start
     for x in range(0,rounds):
@@ -398,6 +408,18 @@ def aesAlgorithm(input, key, rounds=10):
         shiftRows(currentBlock)
         mixed = mixColumns(currentBlock)
         currentBlock = addRoundKey(mixed, keyRounds, x+1)
+        
+        clear()
+        frame = "Cipher block obtained after round {0}:\n".format(x+1)
+        frame += matToStr(currentBlock)
+        print(frame)
+        time.sleep(1.0)
+    
+    clear()
+    frame = "Cipher block before final round:\n"
+    frame += matToStr(currentBlock)
+    print(frame)
+    time.sleep(2.0)
     subBytesMat(currentBlock)
     shiftRows(currentBlock)
     return addRoundKey(currentBlock, keyRounds, rounds)
@@ -409,13 +431,7 @@ testKey.shape = (4,4)
 
 rounds = 1
 
-print("Plaintext Input:")
-print(matToStr(testInput))
-print("Cipher Key:")
-print(matToStr(testKey))
-time.sleep(2.0)
-
-clear()
 cipherText = aesAlgorithm(testInput, testKey, rounds)
+clear()
 print("Ciphertext result after {0} rounds:".format(rounds))
 print(matToStr(cipherText))
