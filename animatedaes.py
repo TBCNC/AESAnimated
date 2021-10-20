@@ -58,9 +58,33 @@ def addWord(mat, word):
     wordAdjusted.shape = (4,1)
     return np.append(mat,wordAdjusted,axis=1)
 
+def drawArrow(frame):
+    clear()
+    frame += " ="
+    print(frame)
+    time.sleep(0.05)
+    clear()
+    frame += "="
+    print(frame)
+    time.sleep(0.05)
+    clear()
+    frame += "="
+    print(frame)
+    time.sleep(0.05)
+    clear()
+    frame += "> "
+    print(frame)
+    time.sleep(0.05)
+    return frame
+
 #Generates the key schedule based on the number of rounds and original key matrix
-def keySchedule(key: bytearray, rounds=10) -> bytearray:
-    #keyRounds = key + bytearray([0x00]*rounds*16)
+def keySchedule(key, rounds=10):
+    clear()
+    frame = "Key Generation [{0} rounds]:\n".format(rounds)
+    for i in range(4):
+        frame += "W{0}:{1}".format(i,binascii.hexlify(getWord(key,i)).decode()) + "\n"
+    print(frame)
+    time.sleep(1.0)
     keyRounds = key
     wordPosition = 4
     while wordPosition < 4+rounds*4:
@@ -72,11 +96,65 @@ def keySchedule(key: bytearray, rounds=10) -> bytearray:
             rConWord = bytearray([rCon[int(wordPosition/4) - 1],0x0,0x0,0x0])
             resultingWord = byteXOR(xorPartA, rConWord)
             keyRounds = addWord(keyRounds, resultingWord)
+            clear()
+            frame += "W{0}: ".format(wordPosition)
+            print(frame)
+            time.sleep(0.05)
+            clear()
+            
+            frame += "(SubBytes(RotWord({0})) ^ W{1}) ^ RCON{2}".format(str(wordPosition-4),str(wordPosition - 1),str(int(wordPosition/4)-1))
+            print(frame)
+            time.sleep(0.1)
+            frame = drawArrow(frame)
+            
+            clear()
+            frame += "({0} ^ {1}) ^ {2}".format(binascii.hexlify(substitutedWord).decode(), binascii.hexlify(startingWord).decode(), binascii.hexlify(rConWord).decode())
+            print(frame)
+            time.sleep(0.1)
+
+            frame = drawArrow(frame)
+
+            clear()
+            frame += "{0} ^ {1}".format(binascii.hexlify(xorPartA).decode(), binascii.hexlify(rConWord).decode())
+            print(frame)
+            time.sleep(0.05)
+
+            frame = drawArrow(frame)
+
+            clear()
+            frame += binascii.hexlify(resultingWord).decode() + "\n"
+            print(frame)
+            time.sleep(0.5)
         else:
             wordA = getWord(keyRounds, wordPosition - 4)
             wordB = getWord(keyRounds, wordPosition - 1)
             result = byteXOR(wordA, wordB)
             keyRounds = addWord(keyRounds, result)
+            
+            clear()
+            frame += "W{0}: ".format(wordPosition)
+            print(frame)
+            time.sleep(0.05)
+
+            clear()
+            frame += "W{0} ^ W{1}".format(wordPosition-4,wordPosition-1)
+            print(frame)
+            time.sleep(0.05)
+
+            frame = drawArrow(frame)
+
+            clear()
+            frame += "{0} ^ {1}".format(binascii.hexlify(wordA).decode(), binascii.hexlify(wordB).decode())
+            print(frame)
+            time.sleep(0.05)
+
+            frame = drawArrow(frame)
+
+            clear()
+            frame += binascii.hexlify(result).decode() + "\n"
+            print(frame)
+            time.sleep(0.5)
+
         wordPosition+=1
     return keyRounds
 
@@ -94,22 +172,6 @@ def matToStr(mat):
 
 def getRoundKey(keys, roundNumber):
     return keys[:, roundNumber*4:((roundNumber+1)*4)]
-
-def subBytesMat(mat):
-    width = len(mat[0])
-    height = len(mat)
-    for y in range(0,height):
-        for x in range(0,width):
-            currentItem = mat[y,x]
-            replacementItem = sBox[currentItem]
-            mat[y][x] = replacementItem
-
-def shiftRows(mat):
-    height = len(mat)
-    for y in range(0,height):
-        currentRow = mat[y,:]
-        newRow = np.roll(currentRow,-y)
-        mat[y,:] = newRow
 
 def mixColumns(mat):
     clear()
@@ -144,66 +206,21 @@ def mixColumns(mat):
         print(frame)
         time.sleep(0.50)
 
-        clear()
-        frame += " ="
-        print(frame)
-        time.sleep(0.05)
-        clear()
-        frame += "="
-        print(frame)
-        time.sleep(0.05)
-        clear()
-        frame += "="
-        print(frame)
-        time.sleep(0.05)
-        clear()
-        frame += "> "
-        print(frame)
-        time.sleep(0.05)
+        frame = drawArrow(frame)
 
         clear()
-        frame += "(W{0} << 1) XOR (((W{1} >> 7) & 1) * 1b)" .format(w,w)
+        frame += "(W{0} << 1) ^ (((W{1} >> 7) & 1) * 1b)" .format(w,w)
         print(frame)
         time.sleep(0.5)
 
-        clear()
-        frame += " ="
-        print(frame)
-        time.sleep(0.05)
-        clear()
-        frame += "="
-        print(frame)
-        time.sleep(0.05)
-        clear()
-        frame += "="
-        print(frame)
-        time.sleep(0.05)
-        clear()
-        frame += "> "
-        print(frame)
-        time.sleep(0.05)
+        frame = drawArrow(frame)
 
         clear()
         frame += "({0} << 1) ^ ((({1} >> 7) & 1) * 1b)" .format(binascii.hexlify(r).decode(),binascii.hexlify(r).decode())
         print(frame)
         time.sleep(0.5)
 
-        clear()
-        frame += " ="
-        print(frame)
-        time.sleep(0.05)
-        clear()
-        frame += "="
-        print(frame)
-        time.sleep(0.05)
-        clear()
-        frame += "="
-        print(frame)
-        time.sleep(0.05)
-        clear()
-        frame += "> "
-        print(frame)
-        time.sleep(0.05)
+        frame = drawArrow(frame)
 
         clear()
         frame += str(b) + "\n"
@@ -222,79 +239,24 @@ def mixColumns(mat):
 
         for i in range(4):
             clear()
-            frame += "D{0}".format(i)
-            print(frame)
-            time.sleep(0.05)
-            clear()
+            frame += "D{0} ===> ".format(i)
 
-            clear()
-            frame += " ="
-            print(frame)
-            time.sleep(0.05)
-            clear()
-            frame += "="
-            print(frame)
-            time.sleep(0.05)
-            clear()
-            frame += "="
-            print(frame)
-            time.sleep(0.05)
-            clear()
-            frame += "> "
-            print(frame)
-            time.sleep(0.05)
-
-            clear()
             frame += "G{0}[{1}] ^ W{0}[{2}] ^ W{0}[{3}] ^ G{0}[{4}] ^ W{0}[{5}]".format(i,offsets[i][0],offsets[i][1],offsets[i][2],offsets[i][3],offsets[i][4])
-            print(frame)
-            time.sleep(0.5)
 
-            clear()
-            frame += " ="
-            print(frame)
-            time.sleep(0.05)
-            clear()
-            frame += "="
-            print(frame)
-            time.sleep(0.05)
-            clear()
-            frame += "="
-            print(frame)
-            time.sleep(0.05)
-            clear()
-            frame += "> "
-            print(frame)
-            time.sleep(0.05)
-
-            clear()
+            frame += "===>"
+            
             frame += "{0} ^ {1} ^ {2} ^ {3} ^ {4}".format(b[offsets[i][0]],a[offsets[i][1]],a[offsets[i][2]],b[offsets[i][3]],a[offsets[i][4]])
-            print(frame)
-            time.sleep(0.5)
 
-            clear()
-            frame += " ="
-            print(frame)
-            time.sleep(0.05)
-            clear()
-            frame += "="
-            print(frame)
-            time.sleep(0.05)
-            clear()
-            frame += "="
-            print(frame)
-            time.sleep(0.05)
-            clear()
-            frame += "> "
-            print(frame)
-            time.sleep(0.05)
+            frame += "===>"
 
-            clear()
             frame += '0x{:02x}\n'.format(resWord[i])
             print(frame)
             time.sleep(0.2)
 
         clear()
-        frame += "New Word {0}: {1}".format(w,resWord)
+        frame += "New W{0}".format(w)
+        frame += " ===> [D0,D1,D2,D3] ===> "
+        frame += '{0}\n'.format(binascii.hexlify(getWord(res,w)).decode())
         print(frame)
         time.sleep(2.0)
     
@@ -360,22 +322,10 @@ def addRoundKey(mat, keys, roundNumber):
 
     return result
 
-#This performs the actual algorithm for a matrix, put in animations, command options, etc perhaps another time soon, it is fucking 1:30am.
-def aesAlgorithm(input, key, rounds=10):
-    keyRounds = keySchedule(key,rounds)
-    start = addRoundKey(input, keyRounds, 0)
-    currentBlock = start
-    for x in range(1,rounds):
-        subBytesMat(currentBlock)
-        shiftRows(currentBlock)
-        mixed = mixColumns(currentBlock)
-        currentBlock = addRoundKey(mixed, keyRounds, x)
-    subBytesMat(currentBlock)
-    shiftRows(currentBlock)
-    return addRoundKey(currentBlock, keyRounds, rounds)
 
 
-def subBytesAnimation(mat):
+
+def subBytesMat(mat):
     clear()
     frameStr = "Substitute Bytes:"
     print(frameStr)
@@ -388,27 +338,33 @@ def subBytesAnimation(mat):
     clear()
     frameStr += "      |\n"
     print(frameStr)
-    time.sleep(0.2)
+    time.sleep(0.1)
     clear()
     frameStr += "      |  S-BOX\n"
     print(frameStr)
-    time.sleep(0.2)
+    time.sleep(0.1)
     clear()
     frameStr += "      |\n"
     print(frameStr)
-    time.sleep(0.2)
+    time.sleep(0.1)
     clear()
     frameStr += "      v\n"
     print(frameStr)
-    time.sleep(0.2)
-    subBytesMat(mat)
+    time.sleep(0.1)
+    width = len(mat[0])
+    height = len(mat)
+    for y in range(0,height):
+        for x in range(0,width):
+            currentItem = mat[y,x]
+            replacementItem = sBox[currentItem]
+            mat[y][x] = replacementItem
     newMatrixStr = matToStr(mat)
     clear()
     frameStr += newMatrixStr
     print(frameStr)
     time.sleep(2)
 
-def shiftRowsAnimation(mat):
+def shiftRows(mat):
     clear()
     frameStr = "Shift Rows:\n"
     print(frameStr)
@@ -429,14 +385,29 @@ def shiftRowsAnimation(mat):
         matChange = matToStr(mat)
         frameStr += matChange
         print(frameStr)
-        time.sleep(1.3)
+        time.sleep(0.5)
     
+
+#This performs the actual algorithm for a matrix, put in animations, command options, etc perhaps another time soon, it is fucking 1:30am.
+def aesAlgorithm(input, key, rounds=10):
+    keyRounds = keySchedule(key,rounds)
+    start = addRoundKey(input, keyRounds, 0)
+    currentBlock = start
+    for x in range(0,rounds):
+        subBytesMat(currentBlock)
+        shiftRows(currentBlock)
+        mixed = mixColumns(currentBlock)
+        currentBlock = addRoundKey(mixed, keyRounds, x+1)
+    subBytesMat(currentBlock)
+    shiftRows(currentBlock)
+    return addRoundKey(currentBlock, keyRounds, rounds)
 
 testInput = np.array(bytearray([0x32,0x88,0x31,0xe0,0x43,0x5a,0x31,0x37,0xf6,0x30,0x98,0x07,0xa8,0x8d,0xa2,0x34]), dtype=np.ubyte)
 testKey = np.array(bytearray([0x2b,0x28,0xab,0x09,0x7e,0xae,0xf7,0xcf,0x15,0xd2,0x15,0x4f,0x16,0xa6,0x88,0x3c]), dtype=np.byte)
 testInput.shape = (4,4)
 testKey.shape = (4,4)
 
+rounds = 1
 
 print("Plaintext Input:")
 print(matToStr(testInput))
@@ -444,27 +415,7 @@ print("Cipher Key:")
 print(matToStr(testKey))
 time.sleep(2.0)
 
-'''
-print("Input Matrix:")
-print(matToStr(testInput))
-print("Key Matrix:")
-print(matToStr(testKey))
-output = aesAlgorithm(testInput,testKey)
-
-print("Result:")
-print(matToStr(output))
-'''
-
-keyRounds = keySchedule(testKey,10)
-start = addRoundKey(testInput, keyRounds, 0)
-
 clear()
-
-subBytesAnimation(start)
-shiftRowsAnimation(start)
-resMix = mixColumns(start)
-cipherText = addRoundKey(resMix,keyRounds,1)
-
-clear()
-print("Ciphertext Result:")
+cipherText = aesAlgorithm(testInput, testKey, rounds)
+print("Ciphertext result after {0} rounds:".format(rounds))
 print(matToStr(cipherText))
