@@ -56,7 +56,6 @@ def getWord(mat, pos):
 
 #Adds a column which is of length word
 def addWord(mat, word):
-    #Assuming we are accepting input as bytearray
     wordAdjusted = np.array(word,dtype=np.byte)
     wordAdjusted.shape = (4,1)
     return np.append(mat,wordAdjusted,axis=1)
@@ -388,7 +387,6 @@ def shiftRows(mat):
         print(frameStr)
         time.sleep(0.5)
     
-#This performs the actual algorithm for a matrix, put in animations, command options, etc perhaps another time soon, it is fucking 1:30am.
 def aesAlgorithm(input, key, rounds=10):
     clear()
     frame = "Starting AES algorithm for {0} rounds on the following plaintext input and key:".format(rounds)
