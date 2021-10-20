@@ -1,14 +1,17 @@
 '''
-Notice: This is not designed to be a secure solution AT ALL, and could maybe be more efficient.
-The whole purpose of this script is to demonstrate the process of ECB (which mind you, isn't secure) AES encryption/decryption with a custom input (message and key).
-'''
-#https://www.youtube.com/watch?v=EucPkcOYekE
+(C) 2021 Charles Hampton-Evans
 
+Notice: This is not designed to be a secure solution AT ALL, and it is definitely not designed to be efficient.
+The whole purpose of this script is to demonstrate the steps of AES encryption/decryption with a small custom plaintext input, small custom key and small round count (message and key).
+In reality, you would most likely use 10+ rounds and a longer plaintext input which uses CBC and an IV, and a key which is generated using a key generation algorithm (PBKDF2).
+TL;DR This code is an educational proof of concept.
+'''
 
 import binascii
 import numpy as np
 import time
 import os
+import sys
 
 #Substitution box pulled from wikipedia
 sBox = [0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
@@ -429,9 +432,65 @@ testKey = np.array(bytearray([0x2b,0x28,0xab,0x09,0x7e,0xae,0xf7,0xcf,0x15,0xd2,
 testInput.shape = (4,4)
 testKey.shape = (4,4)
 
-rounds = 1
+arguments = sys.argv
 
-cipherText = aesAlgorithm(testInput, testKey, rounds)
+helpText='''
+    Terminal AES animation by Charles Hampton-Evans
+
+    Usage:
+    python3 animatedaes.py --help      -       Help screen
+    python3 animatedaes.py "[plaintext input : Max 16 characters]" "[key : Max 16 characters]" [rounds : Optional, default is 1]
+
+    Description:
+    This program provides a step-by-step animation in the terminal of the AES algorithm using the Rijndael functions. This is not designed to be a secure solution, and for the moment, will take only inputs less than 16 characters. This is because AES is a block cipher, and the animation for one block already takes approximately one minute, so animating multiple blocks would be highly time consuming and would not change the educational outcome.
+'''
+
+if len(arguments) < 2:
+    print("Not enough arguments provided. For advice, use -h or --help.")
+    exit(1)
+
+if arguments[1].lower() == "--help" or arguments[1].lower() == "-h":
+    print(helpText)
+    exit(1)
+
+input = arguments[1]
+key = arguments[2]
+
+if len(input) > 16:
+    print("Plaintext input too long, the maximum is 16 characters.")
+    exit()
+
+if len(key) > 16:
+    print("Key too long, the maximum is 16 characters.")
+    exit()
+
+rounds = 1
+if len(arguments) > 3:
+    rounds = arguments[3]
+
+inputBytes = bytearray()
+inputBytes.extend(map(ord,input))
+keyBytes = bytearray()
+keyBytes.extend(map(ord,key))
+
+print("Plaintext:" + input + " ===> " + binascii.hexlify(inputBytes).decode())
+print("Key:" + key + " ===> " + binascii.hexlify(keyBytes).decode())
+
+plainTextBlock = np.pad(np.array(inputBytes, dtype=np.byte),(0,16-len(input)))
+plainTextBlock.shape = (4,4)
+
+keyBlock = np.pad(np.array(keyBytes, dtype=np.byte),(0,16-len(key)))
+keyBlock.shape = (4,4)
+
+print("Plaintext Block (Empty portions padded with 0):")
+print(matToStr(plainTextBlock))
+print("Key Block (Empty portions padded with 0):")
+print(matToStr(keyBlock))
+time.sleep(2.0)
+
+cipherText = aesAlgorithm(plainTextBlock, keyBlock, rounds)
 clear()
-print("Ciphertext result after {0} rounds:".format(rounds))
+print("Ciphertext block after {0} rounds:".format(rounds))
 print(matToStr(cipherText))
+cipherText.shape = (1,16)
+print("Ciphertext result as a hexadecimal string:{0}".format(binascii.hexlify(cipherText).decode()))
